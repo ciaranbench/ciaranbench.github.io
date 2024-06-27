@@ -8,9 +8,8 @@
     <style>
         body {
             font-size: 16px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
         }
         .container {
             display: flex;
@@ -22,7 +21,7 @@
         }
         .text {
             font-style: italic;
-            padding: 10px;
+            padding: 10px 10px 10px 0;
             font-size: 1em;
             line-height: 1.5;
         }
@@ -33,20 +32,22 @@
         .sky-image {
             width: 40%;
         }
+        .email {
+            display: block;
+            margin: 10px 0;
+        }
         /* Styles for small screens */
         @media (max-width: 768px) {
             .image-container, .text-container, .sky-image {
                 width: 100%;
                 max-width: 400px;
-                margin: 0 auto;
             }
         }
     </style>
 </head>
 <body>
     <img src="assets/sky.jpg" alt="Sky" class="sky-image">
-    <br>
-    <a style="text-decoration: none"><span style="background-color: #FFFF00"><b>email</b></span>: ciaran[dot]bench[at]alumni[dot]ucl[dot]ac[dot]uk</a>
+    <a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>email</b></span>: ciaran[dot]bench[at]alumni[dot]ucl[dot]ac[dot]uk</a>
     <div class="container">
         <div class="image-container">
             <img src="assets/dog.png" alt="dog" class="dog-image">
