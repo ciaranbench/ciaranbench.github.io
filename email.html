@@ -8,6 +8,9 @@
     <style>
         body {
             font-size: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
         .container {
             display: flex;
@@ -23,18 +26,19 @@
             font-size: 1em;
             line-height: 1.5;
         }
-        .sky-image {
-            padding-top: 0%;
-            width: 40%;
-        }
-        .dog-image {
-            width: 100%;
+        .sky-image, .dog-image {
+            max-width: 100%;
             height: auto;
         }
+        .sky-image {
+            width: 40%;
+        }
         /* Styles for small screens */
-        @media (max-width: 1200px) {
+        @media (max-width: 768px) {
             .image-container, .text-container, .sky-image {
                 width: 100%;
+                max-width: 400px;
+                margin: 0 auto;
             }
         }
     </style>
