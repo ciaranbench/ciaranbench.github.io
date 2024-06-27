@@ -16,7 +16,7 @@
             flex-wrap: wrap;
             max-width: 100%;
         }
-        .image-container, .text-container {
+        .image-container, .text-container, .sky-container {
             width: 40%;
         }
         .text {
@@ -26,11 +26,8 @@
             line-height: 1.5;
         }
         .sky-image, .dog-image {
-            max-width: 100%;
+            width: 100%;
             height: auto;
-        }
-        .sky-image {
-            width: 40%;
         }
         .email {
             display: block;
@@ -38,7 +35,7 @@
         }
         /* Styles for small screens */
         @media (max-width: 768px) {
-            .image-container, .text-container, .sky-image {
+            .image-container, .text-container, .sky-container {
                 width: 100%;
                 max-width: 400px;
             }
@@ -46,7 +43,9 @@
     </style>
 </head>
 <body>
-    <img src="assets/sky.jpg" alt="Sky" class="sky-image">
+    <div class="sky-container">
+        <img src="assets/sky.jpg" alt="Sky" class="sky-image">
+    </div>
     <a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>email</b></span>: ciaran[dot]bench[at]alumni[dot]ucl[dot]ac[dot]uk</a>
     <div class="container">
         <div class="image-container">
