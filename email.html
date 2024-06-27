@@ -18,11 +18,15 @@
         }
         .image-container, .text-container, .sky-container {
             width: 25%;
+            padding-left: 5px; /* Small left padding for all containers */
+        }
+        .sky-container {
+            padding-top: 5px; /* Small top padding for sky image */
         }
         .text {
             font-style: italic;
             padding: 10px 10px 10px 0;
-            font-size: 0.8vw; /* Relative to viewport width */
+            font-size: 0.8vw;
             line-height: 1.5;
         }
         .sky-image, .dog-image {
@@ -32,7 +36,8 @@
         .email {
             display: block;
             margin: 10px 0;
-            font-size: 0.8vw; /* Relative to viewport width */
+            font-size: 0.8vw;
+            padding-left: 5px; /* Small left padding for email */
         }
         /* Styles for small screens */
         @media (max-width: 768px) {
@@ -40,7 +45,7 @@
                 width: 25%;
             }
             .text, .email {
-                font-size: 2vw; /* Larger relative font size for readability on small screens */
+                font-size: 2vw;
             }
         }
     </style>
