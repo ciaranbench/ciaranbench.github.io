@@ -7,9 +7,9 @@
     <link rel="icon" type="image/png" href="assets/fav.PNG">
     <style>
         body {
-            font-size: 16px;
             margin: 0;
             padding: 0;
+            font-size: 16px;
         }
         .container {
             display: flex;
@@ -22,7 +22,7 @@
         .text {
             font-style: italic;
             padding: 10px 10px 10px 0;
-            font-size: 1em;
+            font-size: 0.8vw; /* Relative to viewport width */
             line-height: 1.5;
         }
         .sky-image, .dog-image {
@@ -32,11 +32,15 @@
         .email {
             display: block;
             margin: 10px 0;
+            font-size: 0.8vw; /* Relative to viewport width */
         }
         /* Styles for small screens */
         @media (max-width: 768px) {
             .image-container, .text-container, .sky-container {
                 width: 25%;
+            }
+            .text, .email {
+                font-size: 2vw; /* Larger relative font size for readability on small screens */
             }
         }
     </style>
