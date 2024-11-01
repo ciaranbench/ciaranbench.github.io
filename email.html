@@ -16,12 +16,14 @@
             flex-wrap: wrap;
             max-width: 100%;
         }
-        .image-container, .text-container, .sky-container {
+        .sky-container, .temple-container {
             width: 25%;
             padding-left: 5px; /* Small left padding for all containers */
+            padding-top: 5px; /* Small top padding for images */
         }
-        .sky-container {
-            padding-top: 5px; /* Small top padding for sky image */
+        .sky-image, .temple-image {
+            width: 100%;
+            height: auto;
         }
         .text {
             font-style: italic;
@@ -37,10 +39,6 @@
             line-height: 1.5;
             padding: 1px 10px 10px 0;
         }
-        .sky-image, .dog-image {
-            width: 100%;
-            height: auto;
-        }
         .email {
             display: block;
             margin: 10px 0;
@@ -49,7 +47,7 @@
         }
         /* Styles for small screens */
         @media (max-width: 768px) {
-            .image-container, .text-container, .sky-container {
+            .sky-container, .temple-container {
                 width: 40%;
             }
             .text, .english-text, .email {
@@ -76,8 +74,8 @@
         <img src="assets/sky.jpg" alt="Sky" class="sky-image">
     </div>
     <a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>email</b></span>: ciaran[dot]bench[at]alumni[dot]ucl[dot]ac[dot]uk</a>
-    <div class="sky-container">
-            <img src="assets/temple.jfif" alt="temple" class="temple-image">
+    <div class="temple-container">
+        <img src="assets/temple.jfif" alt="Temple" class="temple-image">
     </div>
         <!-- <div class="text-container">
             <p class="text">天長地久。天地所以能長且久者，以其不自生，故能長生。是以聖人後其身而身先；外其身而身存。非以其無私耶？故能成其私。</p>
