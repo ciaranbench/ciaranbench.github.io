@@ -14,6 +14,10 @@
         .content {
             margin: 2vh 2vw;
         }
+        .arrow-container {
+            width: fit-content; /* Adjust width to fit the arrow */
+            margin: 0 auto; /* Center the container */
+        }
         .arrow {
             font-size: 2rem;
             margin-bottom: 2vh; /* Gap between arrow and image */
@@ -22,19 +26,20 @@
         }
         .image-container {
             display: flex;
-            justify-content: flex-start;
-            align-items: flex-start;
-            width: 70%;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
             position: relative;
         }
         .image-container a {
             position: relative;
             display: inline-block;
+            width: fit-content;
         }
-        .arrow-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
+        .image-container img {
+            width: 80%;
+            max-width: 400px; /* Reduced max-width */
+            height: auto;
         }
     </style>
 </head>
