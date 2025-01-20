@@ -6,92 +6,38 @@
     <title>Ciaran Bench</title>
     <link rel="icon" type="image/png" href="assets/info.PNG">
     <style>
-        body {
+        body, html {
+            height: 100%;
             margin: 0;
-            padding: 0;
-            font-size: 16px;
-        }
-        .container {
             display: flex;
-            flex-wrap: wrap;
-            max-width: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .sky-container, .temple-container {
-            width: 25%;
-            padding-left: 5px;
-            padding-top: 5px;
-            position: relative; /* Added to position the down arrow text */
+        .arrow {
+            font-size: 2rem;
+            margin-bottom: 20px;
         }
-        .sky-image, .temple-image {
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 100%;
+        }
+        .image-container img {
+            width: 100%;
+            max-width: 500px;
             height: auto;
-        }
-        .down-arrow {
-            position: absolute;
-            top: 0.5em; /* Reduced this value to position the text vertically */
-            width: 100%;
-            text-align: center;
-            font-size: 2em; /* Adjust the size as needed */
-            color: red; /* Adjust the color as needed */
-            margin-bottom: 0.5em; /* Reduced space below the arrow */
-        }
-        .text {
-            font-style: italic;
-            padding: 10px 10px 10px 0;
-            font-size: 0.8vw;
-            line-height: 1.5;
-        }
-        .english-text {
-            font-family: "Times New Roman", Times, serif;
-            font-style: italic;
-            color: blue;
-            font-size: 0.8vw;
-            line-height: 1.5;
-            padding: 1px 10px 10px 0;
-        }
-        .email {
-            display: block;
-            margin: 10px 0;
-            font-size: 0.8vw;
-            padding-left: 5px;
-        }
-        /* Styles for small screens */
-        @media (max-width: 768px) {
-            .sky-container, .temple-container {
-                width: 100%;
-            }
-            .text, .english-text, .email {
-                font-size: 4vw;
-                padding-top: 0;
-                margin-top: 0;
-            }
-            .sky-container {
-                width: 100%;
-            }
-            .text {
-                padding-bottom: 1px;
-                margin-bottom: 0;
-            }
-            .english-text {
-                padding-top: 1px;
-                margin-top: 0;
-            }
-            .down-arrow {
-                font-size: 4vw; /* Adjust the size for smaller screens using vw units */
-                margin-bottom: 5vw; /* Add space below the arrow using vw units */
-                margin-top: -2vw; /* Add space below the arrow using vw units */
-            }
         }
     </style>
 </head>
 <body>
-    <!--<a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>medium</b></span>: https://medium.com/@ciaranbench</a> -->
-    <!--<a href="https://medium.com/@ciaranbench" style="color: green;">medium</a>-->
-    <div class="temple-container">
+    <div class="arrow">&#8595;</div> <!-- Down arrow -->
+    <div class="image-container">
         <a href="https://medium.com/@ciaranbench">
-            <div class="down-arrow">↓</div> <!-- Centered down arrow text with proportional spacing -->
-            <img src="assets/info.png" alt="info" class="temple-image">
+            <img src="assets/info.png" alt="Hyperlinked Image">
         </a>
     </div>
 </body>
+</html>
 </html>
