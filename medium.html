@@ -9,19 +9,19 @@
         body, html {
             height: 100%;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 0;
+        }
+        .content {
+            margin: 2vh 2vw;
         }
         .arrow {
             font-size: 2rem;
-            margin-top: 2vh; /* Margin from top of the page */
             margin-bottom: 2vh; /* Gap between arrow and image */
         }
         .image-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: flex-start;
             width: 100%;
         }
         .image-container img {
@@ -32,11 +32,13 @@
     </style>
 </head>
 <body>
-    <div class="arrow">&#8595;</div> <!-- Down arrow -->
-    <div class="image-container">
-        <a href="your-hyperlink-here">
-            <img src="your-image-source.jpg" alt="Hyperlinked Image">
-        </a>
+    <div class="content">
+        <div class="arrow">&#8595;</div> <!-- Down arrow -->
+        <div class="image-container">
+            <a href="your-hyperlink-here">
+                <img src="your-image-source.jpg" alt="Hyperlinked Image">
+            </a>
+        </div>
     </div>
 </body>
 </html>
