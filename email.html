@@ -1,17 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ciaran Bench</title>
-    <link rel="icon" type="image/png" href="assets/info.PNG">
+    <link rel="icon" type="image/png" href="assets/fav.PNG">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 16px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 100%;
+        }
+        .sky-container, .temple-container {
+            width: 25%;
+            padding-left: 5px; /* Small left padding for all containers */
+            padding-top: 5px; /* Small top padding for images */
+        }
+        .sky-image, .temple-image {
+            width: 100%;
+            height: auto;
+        }
+        .text {
+            font-style: italic;
+            padding: 10px 10px 10px 0;
+            font-size: 0.8vw;
+            line-height: 1.5;
+        }
+        .english-text {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            color: blue;
+            font-size: 0.8vw;
+            line-height: 1.5;
+            padding: 1px 10px 10px 0;
+        }
+        .email {
+            display: block;
+            margin: 10px 0;
+            font-size: 0.8vw;
+            padding-left: 5px; /* Small left padding for email */
+        }
+        /* Styles for small screens */
+        @media (max-width: 768px) {
+            .sky-container, .temple-container {
+                width: 40%;
+            }
+            .text, .english-text, .email {
+                font-size: 2vw;
+                padding-top: 0;
+                margin-top: 0;
+            }
+            .sky-container {
+                width: 40%; /* Make sky image container consistent with others */
+            }
+            .text {
+            padding-bottom: 1px; /* Reduce bottom padding */
+            margin-bottom: 0; /* Remove bottom margin */
+            }
+            .english-text {
+            padding-top: 1px; /* Reduce top padding */
+            margin-top: 0; /* Remove top margin */
+            }
+        }
+    </style>
 </head>
-
 <body>
-    <a href="https://medium.com/@ciaranbench">
-        <img src="assets/info.png" alt="Clickable Image" style="max-width: 100%; height: auto;">
-    </a>
+    <div class="sky-container">
+        <img src="assets/sky.jpg" alt="Sky" class="sky-image">
+    </div>
+    <a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>email</b></span>: ciaran[dot]bench[at]alumni[dot]ucl[dot]ac[dot]uk</a>
+    <div class="temple-container">
+        <img src="assets/temple.jfif" alt="Temple" class="temple-image">
+    </div>
+        <!-- <div class="text-container">
+            <p class="text">天長地久。天地所以能長且久者，以其不自生，故能長生。是以聖人後其身而身先；外其身而身存。非以其無私耶？故能成其私。</p>
+            <p class="english-text">The Tao of Heaven is eternal, and the earth is long enduring. Why are they long enduring?<br>They do not live for themselves; thus they are present for all beings.<br>The Master puts themselves last; And finds themselves in the place of authority.<br> They detach themselves from all things; Therefore they are united with all things.<br> They give no thought to self.<br> They are perfectly fulfilled.<br></p>
+        </div>
+    </div> -->
 </body>
-
 </html>
