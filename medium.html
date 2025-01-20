@@ -17,23 +17,32 @@
         .arrow {
             font-size: 2rem;
             margin-bottom: 2vh; /* Gap between arrow and image */
+            color: red;
+            text-align: center;
         }
         .image-container {
             display: flex;
             justify-content: flex-start;
             align-items: flex-start;
             width: 100%;
+            position: relative;
         }
-        .image-container img {
+        .image-container a {
+            position: relative;
+            display: inline-block;
+        }
+        .arrow-container {
             width: 100%;
-            max-width: 500px;
-            height: auto;
+            display: flex;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
     <div class="content">
-        <div class="arrow">&#8595;</div> <!-- Down arrow -->
+        <div class="arrow-container">
+            <div class="arrow">&#8595;</div> <!-- Down arrow -->
+        </div>
         <div class="image-container">
             <a href="https://medium.com/@ciaranbench">
                 <img src="assets/info.png">
