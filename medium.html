@@ -28,14 +28,12 @@
         }
         .down-arrow {
             position: absolute;
-            top: 5px; /* Adjust this value to position the text vertically */
+            top: 1em; /* Adjust this value to position the text vertically, using em units */
             width: 100%;
             text-align: center;
             font-size: 2em; /* Adjust the size as needed */
             color: red; /* Adjust the color as needed */
-        }
-        .spacer {
-            height: 20%; /* Responsive space as a percentage of the image height */
+            margin-bottom: 1em; /* Add space below the arrow using em units */
         }
         .text {
             font-style: italic;
@@ -78,16 +76,19 @@
                 padding-top: 1px;
                 margin-top: 0;
             }
+            .down-arrow {
+                font-size: 4vw; /* Adjust the size for smaller screens using vw units */
+                margin-bottom: 2vw; /* Add space below the arrow using vw units */
+            }
         }
     </style>
 </head>
 <body>
     <!--<a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>medium</b></span>: https://medium.com/@ciaranbench</a> -->
-    <!--<a href="https://medium.com/@ciaranbench" style="color: green;">medium</a>-->
+    <a href="https://medium.com/@ciaranbench" style="color: green;">medium</a>
     <div class="temple-container">
         <a href="https://medium.com/@ciaranbench">
-            <div class="down-arrow">↓</div> <!-- Centered down arrow text -->
-            <div class="spacer"></div> <!-- Responsive space between arrow and image -->
+            <div class="down-arrow">↓</div> <!-- Centered down arrow text with proportional spacing -->
             <img src="assets/info.png" alt="info" class="temple-image">
         </a>
     </div>
