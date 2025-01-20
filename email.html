@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ciaran Bench</title>
-    <link rel="icon" type="image/png" href="assets/fav.PNG">
+    <link rel="icon" type="image/png" href="assets/info.PNG">
     <style>
         body {
             margin: 0;
@@ -18,12 +18,22 @@
         }
         .sky-container, .temple-container {
             width: 25%;
-            padding-left: 5px; /* Small left padding for all containers */
-            padding-top: 5px; /* Small top padding for images */
+            padding-left: 5px;
+            padding-top: 5px;
+            position: relative;
         }
         .sky-image, .temple-image {
             width: 100%;
             height: auto;
+        }
+        .down-arrow {
+            position: absolute;
+            top: 0; /* Start at the top */
+            width: 100%;
+            text-align: center;
+            font-size: 2em;
+            color: red;
+            margin-bottom: 0.5em;
         }
         .text {
             font-style: italic;
@@ -43,44 +53,42 @@
             display: block;
             margin: 10px 0;
             font-size: 0.8vw;
-            padding-left: 5px; /* Small left padding for email */
+            padding-left: 5px;
         }
-        /* Styles for small screens */
         @media (max-width: 768px) {
             .sky-container, .temple-container {
-                width: 40%;
+                width: 100%;
             }
             .text, .english-text, .email {
-                font-size: 2vw;
+                font-size: 4vw;
                 padding-top: 0;
                 margin-top: 0;
             }
             .sky-container {
-                width: 40%; /* Make sky image container consistent with others */
+                width: 100%;
             }
             .text {
-            padding-bottom: 1px; /* Reduce bottom padding */
-            margin-bottom: 0; /* Remove bottom margin */
+                padding-bottom: 1px;
+                margin-bottom: 0;
             }
             .english-text {
-            padding-top: 1px; /* Reduce top padding */
-            margin-top: 0; /* Remove top margin */
+                padding-top: 1px;
+                margin-top: 0;
+            }
+            .down-arrow {
+                font-size: 4vw;
+                margin-bottom: 5vw;
+                margin-top: -2vw;
             }
         }
     </style>
 </head>
 <body>
-    <div class="sky-container">
-        <img src="assets/sky.jpg" alt="Sky" class="sky-image">
-    </div>
-    <a class="email" style="text-decoration: none"><span style="background-color: #FFFF00"><b>email</b></span>: ciaran[dot]bench[at]alumni[dot]ucl[dot]ac[dot]uk</a>
     <div class="temple-container">
-        <img src="assets/temple.jfif" alt="Temple" class="temple-image">
+        <a href="https://medium.com/@ciaranbench">
+            <div class="down-arrow">↓</div> <!-- Ensure the arrow starts at the top -->
+            <img src="assets/info.png" alt="info" class="temple-image">
+        </a>
     </div>
-        <!-- <div class="text-container">
-            <p class="text">天長地久。天地所以能長且久者，以其不自生，故能長生。是以聖人後其身而身先；外其身而身存。非以其無私耶？故能成其私。</p>
-            <p class="english-text">The Tao of Heaven is eternal, and the earth is long enduring. Why are they long enduring?<br>They do not live for themselves; thus they are present for all beings.<br>The Master puts themselves last; And finds themselves in the place of authority.<br> They detach themselves from all things; Therefore they are united with all things.<br> They give no thought to self.<br> They are perfectly fulfilled.<br></p>
-        </div>
-    </div> -->
 </body>
 </html>
