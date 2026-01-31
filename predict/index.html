@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>UFC Fight Prediction</title>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
+<style type="text/css">
+  body {
+    margin: 40px;
+    font-family: "Times New Roman", Times, serif;
+    background: #f5f2eb url('stars-twinkle-cream-4k-gentle.gif') repeat center center;
+    background-size: cover;
+    color: black;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    color: #c00;
+    font-style: italic;
+    text-decoration: underline;
+    margin-bottom: 35px;
+  }
+
+  input[type="text"] {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 18px;
+    padding: 6px;
+    width: 340px;
+    border: 1px solid #666;
+    background: transparent;
+    color: black;
+    box-sizing: border-box;
+  }
+
+  input[type="text"]::placeholder {
+    color: #777;
+    font-family: "Times New Roman", Times, serif;
+  }
+
+  button {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 18px;
+    padding: 6px 30px;
+    background: #f0f0f0;
+    color: black;
+    border: 2px outset #888;
+    cursor: pointer;
+  }
+
+  button:active {
+    border-style: inset;
+  }
+
+  button:disabled {
+    color: #777;
+    background: #e0e0e0;
+    cursor: default;
+  }
+
+  button.rainbow-text span {
+    font-weight: bold;
+  }
+
+  button.rainbow-text span:nth-child(1) { color: #ff0000; }
+  button.rainbow-text span:nth-child(2) { color: #ff7f00; }
+  button.rainbow-text span:nth-child(3) { color: #ffcc00; }
+  button.rainbow-text span:nth-child(4) { color: #00cc00; }
+  button.rainbow-text span:nth-child(5) { color: #0000ff; }
+  button.rainbow-text span:nth-child(6) { color: #4b0082; }
+  button.rainbow-text span:nth-child(7) { color: #8b00ff; }
+
+  #loading, #result {
+    margin: 50px auto;
+    max-width: 1000px;
+    font-size: 18px;
+    line-height: 1.9;
+    background: transparent;
+  }
+
+  #result {
+    font-size: 17px;
+    white-space: pre-wrap;
+  }
+
+  .suggestions {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 6px;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #888;
+    z-index: 10;
+    display: none;
+    font-size: 16px;
+    font-family: "Times New Roman", Times, serif;
+  }
+
+  .suggestions div {
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+
+  .suggestions div:hover {
+    background: #f0f0f0;
+  }
+
+  .fighter-entry {
+    position: relative;
+    width: 340px;
+    margin: 0 auto 30px auto;
+    text-align: center;
+  }
+
+  .fighter-entry label {
+    font-size: 20px;
+    display: block;
+    margin-bottom: 8px;
+    color: #c00;          /* ← changed to red like the title */
+  }
+</style>
+</head>
+
+<body>
+
+<center>
+
+<h1>UFC Fight Prediction</h1>
+
+<img src="pic.jpeg" alt="UFC Banner" style="max-width:25%; height:auto; border:0;"><br><br>
+
+<div class="fighter-entry">
+  <label for="f1">Favorite:</label>
+  <input type="text" id="f1" placeholder="Type fighter name..." autocomplete="off" disabled>
+  <div id="suggestions1" class="suggestions"></div>
+</div>
+
+<div class="fighter-entry">
+  <label for="f2">Underdog:</label>
+  <input type="text" id="f2" placeholder="Type fighter name..." autocomplete="off" disabled>
+  <div id="suggestions2" class="suggestions"></div>
+</div>
+
+<br><br>
+
+<button onclick="compare()" disabled id="compareBtn" class="rainbow-text">
+  <span>P</span><span>r</span><span>e</span><span>d</span><span>i</span><span>c</span><span>t</span>
+</button>
+
+<br><br><br>
+
+<div id="loading">Loading fighter data...</div>
+
+<br>
+
+<div id="result"></div>
+
+</center>
+
+<script>
+let fighters = {};
+const defaultLabels = [
+  "Win Ratio                  ",
+  "Age                        ",
+  "Height (cm)                ",
+  "Reach (cm)                 ",
+  "Weight (lbs)               ",
+  "Total Fights               ",
+  "SLpM                       ",
+  "SApM                       ",
+  "TD Avg                     ",
+  "TD Def %                   ",
+  "Sub Avg                    ",
+  "Sig. Str. %                ",
+  "TD Accuracy %              ",
+  "Sub avg                ",
+  "Win pct                 ",
+  "Stance               "
+];
+
+const mean = [0.0548, -1.9884, 0.2572, 0.2787, 0.3739, -1.2672, 0.0212, 0.0204, 0.0341, 0.0566, 0.26, -0.4759, 0.3644, 0.0498, 0.0548, 0.0438, 2.2109];
+const std  = [0.1265, 5.0149, 2.4259, 3.0995, 9.1375, 10.7452, 0.0927, 0.0907, 0.2588, 0.2853, 1.7256, 1.8246, 1.8408, 0.8051, 0.1265, 1.3473, 1.6564];
+
+let session = null;
+
+async function loadModel() {
+  try {
+    session = await ort.InferenceSession.create('./ufc_model_mc.onnx');
+    console.log("Model loaded successfully");
+  } catch (err) {
+    document.getElementById('result').innerHTML += '<font color="red">Model load error: ' + err + '</font><br>';
+    console.error("Model load failed:", err);
+  }
+}
+
+async function loadData() {
+  const loading = document.getElementById("loading");
+  const btn = document.getElementById("compareBtn");
+
+  try {
+    const r = await fetch('ufc_fighter_dict_clean.json');
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    fighters = await r.json();
+    const names = Object.keys(fighters).sort();
+
+    document.getElementById("f1").disabled = false;
+    document.getElementById("f2").disabled = false;
+    btn.disabled = false;
+
+    loading.innerHTML = "Loaded " + names.length + " fighters ✓";
+
+    setupAutocomplete("f1", "suggestions1", names);
+    setupAutocomplete("f2", "suggestions2", names);
+
+    await loadModel();
+  } catch (e) {
+    loading.innerHTML = '<font color="red">Error: ' + e.message + ' — check json file</font>';
+  }
+}
+
+function setupAutocomplete(inputId, suggId, names) {
+  const input = document.getElementById(inputId);
+  const sugg = document.getElementById(suggId);
+
+  function show(filtered) {
+    sugg.innerHTML = "";
+    if (filtered.length === 0 && input.value.trim()) {
+      sugg.innerHTML = '<div style="color:#555;">No matches</div>';
+    } else {
+      filtered.forEach(n => {
+        const d = document.createElement("div");
+        d.textContent = n;
+        d.onclick = () => {
+          input.value = n;
+          sugg.style.display = "none";
+        };
+        sugg.appendChild(d);
+      });
+    }
+    sugg.style.display = (filtered.length > 0 || !input.value.trim()) ? "block" : "none";
+  }
+
+  input.onfocus = () => show(names);
+  input.oninput = () => {
+    const q = input.value.trim().toLowerCase();
+    show(q ? names.filter(n => n.toLowerCase().includes(q)) : names);
+  };
+
+  document.addEventListener('click', function(e) {
+    if (!input.contains(e.target) && !sugg.contains(e.target)) {
+      sugg.style.display = "none";
+    }
+  });
+}
+
+async function compare() {
+  const n1 = document.getElementById("f1").value.trim();
+  const n2 = document.getElementById("f2").value.trim();
+  const res = document.getElementById("result");
+
+  if (!fighters[n1] || !fighters[n2]) {
+    res.innerHTML = '<font color="red">One or both fighters not found</font>';
+    return;
+  }
+
+  const s1 = fighters[n1].map(Number);
+  const s2 = fighters[n2].map(Number);
+
+  res.innerHTML = ""; // clear previous content
+
+  if (!session) {
+    res.innerHTML += "<font color='red'>Model not loaded yet</font><br><br>";
+  } else {
+    let diffs = s1.map((v,i) => v - (s2[i] ?? 0));
+    diffs.push(1.0);
+
+    for (let i = 0; i < diffs.length; i++) {
+      diffs[i] = (diffs[i] - mean[i]) / (std[i] + 1e-8);
+    }
+
+    const tensor = new ort.Tensor('float32', new Float32Array(diffs), [1, 17]);
+
+    const n = 50;
+    let probs = [];
+    let logits = [];
+
+    try {
+      console.log("Starting MC dropout inference (" + n + " runs)...");
+      for (let i = 0; i < n; i++) {
+        const out = await session.run({input: tensor});
+        const logit = out.output.data[0];
+        logits.push(logit);
+        console.log(`Run ${i+1}: logit = ${logit.toFixed(6)}`);
+        probs.push(1 / (1 + Math.exp(-logit)));
+      }
+
+      const mp = probs.reduce((a,b)=>a+b,0) / n;
+      const varr = probs.reduce((a,b)=>a + Math.pow(b-mp,2),0) / n;
+      const sp = Math.sqrt(varr);
+
+      const uniqueLogits = new Set(logits.map(l => l.toFixed(6)));
+      let note = "";
+      if (uniqueLogits.size === 1) {
+        note = "<br><small style='color:#555;'></small>";
+      } else {
+        note = "<br><small style='color:#006400;'>Variation detected ✓ (dropout appears active)</small>";
+      }
+
+      let out = "<b>Model Prediction:</b><br>";
+      out += n1 + " (Favorite) win probability: <b>" + mp.toFixed(4) + "</b><br>";
+      out += n2 + " (Underdog) win probability: <b>" + (1 - mp).toFixed(4) + "</b><br>";
+      out += note + "<br><br><br>";
+
+      res.innerHTML += out;
+
+    } catch (e) {
+      res.innerHTML += "<font color='red'>Prediction error: " + e + "</font><br><br>";
+      console.error("Prediction failed:", e);
+    }
+  }
+
+  // Stats section (now comes after prediction)
+  let out = "<b>" + n1 + "</b> vs <b>" + n2 + "</b><br><br>";
+  out += "Stat                                                   " +
+         n1.padEnd(26) + "      " +
+         n2.padEnd(26) + "      Diff<br>";
+  out += "───────────────────────────────────────  ──────────────────────────  ──────────────────────────  ─────────<br><br>";
+
+  s1.forEach((v1, i) => {
+    const v2 = s2[i] ?? "?";
+    const d = v1 - (typeof v2 === 'number' ? v2 : 0);
+    let dt = isNaN(d) ? "—" : d.toFixed(2);
+    if (!isNaN(d)) {
+      if (Math.abs(d) < 0.01) dt = "0.00";
+      else if (d > 0) dt = "+" + dt;
+    }
+    const col = d > 0.01 ? 'darkgreen' : d < -0.01 ? 'darkred' : 'black';
+    out += defaultLabels[i] + "  " +
+           v1.toFixed(2).padEnd(26) + "   " +
+           (typeof v2 === 'number' ? v2.toFixed(2) : v2).padEnd(26) + "   " +
+           '<font color="' + col + '"><b>' + dt + '</b></font><br>';
+  });
+
+  res.innerHTML += out;
+
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+window.onload = loadData;
+</script>
+
+</body>
+</html>

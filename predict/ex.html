@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UFC Fighter Stats Compare</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 30px;
+      background: #f8f9fa;
+    }
+    .container {
+      max-width: 960px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      color: #222;
+    }
+    .fighters {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      margin: 30px 0;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    label {
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    input {
+      width: 320px;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+    }
+
+    /* ──────────────────────────────────────── */
+    /*         CUSTOM AUTOCOMPLETE STYLING      */
+    /* ──────────────────────────────────────── */
+    .autocomplete-wrapper {
+      position: relative;
+    }
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      z-index: 1000;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      border-radius: 0 0 6px 6px;
+      display: none;
+    }
+    .suggestions li {
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .suggestions li:hover,
+    .suggestions li.keyboard-active {
+      background: #dc3545;
+      color: white;
+    }
+    .suggestions li.no-match {
+      color: #777;
+      cursor: default;
+    }
+
+    button {
+      padding: 12px 40px;
+      font-size: 18px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 30px auto;
+      display: block;
+    }
+    button:hover {
+      background: #c82333;
+    }
+    #result {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+    }
+    .diff-positive { color: #006400; font-weight: bold; }
+    .diff-negative { color: #8b0000; font-weight: bold; }
+    #loading { text-align: center; color: #666; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>UFC Fighter Stats Compare</h2>
+
+  <div class="fighters">
+    <div class="input-group">
+      <label>Fighter 1</label>
+      <div class="autocomplete-wrapper">
+        <input type="text" id="f1" placeholder="Start typing name..." autocomplete="off" disabled>
+        <ul class="suggestions" id="suggestions1"></ul>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Fighter 2</label>
+      <div class="autocomplete-wrapper">
+        <input type="text" id="f2" placeholder="Start typing name..." autocomplete="off" disabled>
+        <ul class="suggestions" id="suggestions2"></ul>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="compare()" disabled id="compareBtn">COMPARE</button>
+
+  <div id="loading">Loading fighter data...</div>
+  <div id="result"></div>
+</div>
+
+<script>
+// Global data
+let fighters = {};
+let statLabels = [];
+
+// You can update this with real meanings
+const defaultLabels = [
+  "Win Ratio", "Age", "Height (cm)", "Reach (cm)", "Weight (lbs)",
+  "Total Fights", "SLpM", "SApM", "TD Avg", "TD Def %", "Sub Avg",
+  "Sig. Str. %", "TD Accuracy %", "Unknown 13", "Unknown 14", "KO/TKO Wins?"
+];
+
+async function loadData() {
+  const loadingDiv = document.getElementById("loading");
+  const compareBtn = document.getElementById("compareBtn");
+
+  try {
+    const response = await fetch('ufc_fighter_dict_clean.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    fighters = await response.json();
+    const allNames = Object.keys(fighters).sort();
+
+    // Enable inputs & button
+    document.getElementById("f1").disabled = false;
+    document.getElementById("f2").disabled = false;
+    compareBtn.disabled = false;
+
+    loadingDiv.textContent = `Loaded ${allNames.length} fighters ✓`;
+
+    // Setup both autocompletes
+    setupAutocomplete('f1', 'suggestions1', allNames);
+    setupAutocomplete('f2', 'suggestions2', allNames);
+
+  } catch (err) {
+    loadingDiv.innerHTML = `<span style="color:crimson">Error loading data: ${err.message}</span><br>
+      Make sure ufc_fighter_dict_clean.json is in the same folder.`;
+  }
+}
+
+function setupAutocomplete(inputId, suggestionsId, names) {
+  const input = document.getElementById(inputId);
+  const suggestionsList = document.getElementById(suggestionsId);
+
+  function showSuggestions(filtered) {
+    suggestionsList.innerHTML = '';
+    if (filtered.length === 0 && input.value.trim()) {
+      const li = document.createElement('li');
+      li.textContent = 'No matching fighters';
+      li.className = 'no-match';
+      suggestionsList.appendChild(li);
+    } else {
+      filtered.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        li.addEventListener('click', () => {
+          input.value = name;
+          suggestionsList.style.display = 'none';
+        });
+        suggestionsList.appendChild(li);
+      });
+    }
+    suggestionsList.style.display = 'block';
+  }
+
+  input.addEventListener('focus', () => {
+    if (!input.value.trim()) {
+      showSuggestions(names); // show all on focus if empty
+    } else {
+      const query = input.value.trim().toLowerCase();
+      const filtered = names.filter(n => n.toLowerCase().includes(query));
+      showSuggestions(filtered);
+    }
+  });
+
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    const filtered = names.filter(n => n.toLowerCase().includes(query));
+    showSuggestions(filtered);
+  });
+
+  // Hide on outside click
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !suggestionsList.contains(e.target)) {
+      suggestionsList.style.display = 'none';
+    }
+  });
+}
+
+function compare() {
+  const name1 = document.getElementById("f1").value.trim();
+  const name2 = document.getElementById("f2").value.trim();
+  const resultDiv = document.getElementById("result");
+
+  if (!fighters[name1] || !fighters[name2]) {
+    resultDiv.innerHTML = `<span style="color:crimson">One or both fighters not found!</span>`;
+    return;
+  }
+
+  const s1 = fighters[name1];
+  const s2 = fighters[name2];
+  const labels = statLabels.length === s1.length ? statLabels : defaultLabels;
+
+  let output = `<b>${name1}</b>  vs  <b>${name2}</b>\n\n`;
+  output += "Stat                     | " + name1.padEnd(22) + " | " + name2.padEnd(22) + " | Diff\n";
+  output += "─────────────────────────┼────────────────────────┼────────────────────────┼────────\n";
+
+  s1.forEach((val1, i) => {
+    const val2 = s2[i] ?? "?";
+    const diff = Number(val1) - Number(val2);
+
+    let diffText = isNaN(diff) ? "—" : diff.toFixed(2);
+    if (!isNaN(diff)) {
+      if (Math.abs(diff) < 0.01) diffText = "≈0.00";
+      else if (diff > 0) diffText = "+" + diffText;
+    }
+
+    const diffClass = diff > 0.01 ? "diff-positive" :
+                      diff < -0.01 ? "diff-negative" : "";
+
+    const label = labels[i] || `Stat ${i+1}`;
+
+    output += `${label.padEnd(24)} │ `;
+    output += `${Number(val1).toFixed(2).padEnd(22)} │ `;
+    output += `${Number(val2).toFixed(2).padEnd(22)} │ `;
+    output += `<span class="${diffClass}">${diffText}</span>\n`;
+  });
+
+  resultDiv.innerHTML = "<pre>" + output + "</pre>";
+}
+
+// Start loading
+window.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>

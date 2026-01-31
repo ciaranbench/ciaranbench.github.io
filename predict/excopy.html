@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UFC Fighter Stats Compare</title>
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 30px;
+      background: #f8f9fa;
+    }
+    .container {
+      max-width: 960px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      color: #222;
+    }
+    .fighters {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      margin: 30px 0;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    label {
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    input {
+      width: 320px;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+    }
+
+    /* ──────────────────────────────────────── */
+    /*         CUSTOM AUTOCOMPLETE STYLING      */
+    /* ──────────────────────────────────────── */
+    .autocomplete-wrapper {
+      position: relative;
+    }
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      z-index: 1000;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      border-radius: 0 0 6px 6px;
+      display: none;
+    }
+    .suggestions li {
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .suggestions li:hover,
+    .suggestions li.keyboard-active {
+      background: #dc3545;
+      color: white;
+    }
+    .suggestions li.no-match {
+      color: #777;
+      cursor: default;
+    }
+
+    button {
+      padding: 12px 40px;
+      font-size: 18px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 30px auto;
+      display: block;
+    }
+    button:hover {
+      background: #c82333;
+    }
+    #result {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+    }
+    .diff-positive { color: #006400; font-weight: bold; }
+    .diff-negative { color: #8b0000; font-weight: bold; }
+    #loading { text-align: center; color: #666; font-style: italic; }
+    #prediction { margin-top: 20px; color: #333; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>UFC Fighter Stats Compare</h2>
+
+  <div class="fighters">
+    <div class="input-group">
+      <label>Fighter 1 (assumed Favorite)</label>
+      <div class="autocomplete-wrapper">
+        <input type="text" id="f1" placeholder="Start typing name..." autocomplete="off" disabled>
+        <ul class="suggestions" id="suggestions1"></ul>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Fighter 2 (assumed Underdog)</label>
+      <div class="autocomplete-wrapper">
+        <input type="text" id="f2" placeholder="Start typing name..." autocomplete="off" disabled>
+        <ul class="suggestions" id="suggestions2"></ul>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="compare()" disabled id="compareBtn">COMPARE</button>
+
+  <div id="loading">Loading fighter data...</div>
+  <div id="result"></div>
+</div>
+
+<script>
+// Global data
+let fighters = {};
+let statLabels = [];
+
+// Update with real meanings (16 stats based on your code)
+const defaultLabels = [
+  "Win Ratio", "Age", "Height (cm)", "Reach (cm)", "Weight (lbs)",
+  "Total Fights", "SLpM", "SApM", "TD Avg", "TD Def %", "Sub Avg",
+  "Sig. Str. %", "TD Accuracy %", "Unknown 13", "Unknown 14", "KO/TKO Wins?"
+];
+
+// Normalization stats (REPLACE THESE with actual values from your training script printout)
+const mean = [0.0548, -1.9884, 0.2572, 0.2787, 0.3739, -1.2672, 0.0212, 0.0204, 0.0341, 0.0566, 0.26, -0.4759, 0.3644, 0.0498, 0.0548, 0.0438, 2.2109];
+const std = [0.1265, 5.0149, 2.4259, 3.0995, 9.1375, 10.7452, 0.0927, 0.0907, 0.2588, 0.2853, 1.7256, 1.8246, 1.8408, 0.8051, 0.1265, 1.3473, 1.6564];
+
+// ONNX session (loaded once)
+let session = null;
+
+async function loadModel() {
+  try {
+    session = await ort.InferenceSession.create('./ufc_model_mc.onnx');
+    console.log('ONNX model loaded');
+  } catch (err) {
+    console.error('Error loading ONNX model:', err);
+    document.getElementById('result').innerHTML += '<p style="color:crimson">Error loading model: ' + err.message + '</p>';
+  }
+}
+
+async function loadData() {
+  const loadingDiv = document.getElementById("loading");
+  const compareBtn = document.getElementById("compareBtn");
+
+  try {
+    const response = await fetch('ufc_fighter_dict_clean.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    fighters = await response.json();
+    const allNames = Object.keys(fighters).sort();
+
+    // Enable inputs & button
+    document.getElementById("f1").disabled = false;
+    document.getElementById("f2").disabled = false;
+    compareBtn.disabled = false;
+
+    loadingDiv.textContent = `Loaded ${allNames.length} fighters ✓`;
+
+    // Setup both autocompletes
+    setupAutocomplete('f1', 'suggestions1', allNames);
+    setupAutocomplete('f2', 'suggestions2', allNames);
+
+    // Load ONNX model
+    await loadModel();
+
+  } catch (err) {
+    loadingDiv.innerHTML = `<span style="color:crimson">Error loading data: ${err.message}</span><br>
+      Make sure ufc_fighter_dict_clean.json is in the same folder.`;
+  }
+}
+
+function setupAutocomplete(inputId, suggestionsId, names) {
+  const input = document.getElementById(inputId);
+  const suggestionsList = document.getElementById(suggestionsId);
+
+  function showSuggestions(filtered) {
+    suggestionsList.innerHTML = '';
+    if (filtered.length === 0 && input.value.trim()) {
+      const li = document.createElement('li');
+      li.textContent = 'No matching fighters';
+      li.className = 'no-match';
+      suggestionsList.appendChild(li);
+    } else {
+      filtered.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        li.addEventListener('click', () => {
+          input.value = name;
+          suggestionsList.style.display = 'none';
+        });
+        suggestionsList.appendChild(li);
+      });
+    }
+    suggestionsList.style.display = 'block';
+  }
+
+  input.addEventListener('focus', () => {
+    if (!input.value.trim()) {
+      showSuggestions(names); // show all on focus if empty
+    } else {
+      const query = input.value.trim().toLowerCase();
+      const filtered = names.filter(n => n.toLowerCase().includes(query));
+      showSuggestions(filtered);
+    }
+  });
+
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    const filtered = names.filter(n => n.toLowerCase().includes(query));
+    showSuggestions(filtered);
+  });
+
+  // Hide on outside click
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !suggestionsList.contains(e.target)) {
+      suggestionsList.style.display = 'none';
+    }
+  });
+}
+
+async function compare() {
+  const name1 = document.getElementById("f1").value.trim();
+  const name2 = document.getElementById("f2").value.trim();
+  const resultDiv = document.getElementById("result");
+
+  if (!fighters[name1] || !fighters[name2]) {
+    resultDiv.innerHTML = `<span style="color:crimson">One or both fighters not found!</span>`;
+    return;
+  }
+
+  const s1 = fighters[name1].map(Number);  // Ensure numeric
+  const s2 = fighters[name2].map(Number);
+  const labels = statLabels.length === s1.length ? statLabels : defaultLabels;
+
+  let output = `<b>${name1}</b>  vs  <b>${name2}</b>\n\n`;
+  output += "Stat                     | " + name1.padEnd(22) + " | " + name2.padEnd(22) + " | Diff\n";
+  output += "─────────────────────────┼────────────────────────┼────────────────────────┼────────\n";
+
+  s1.forEach((val1, i) => {
+    const val2 = s2[i] ?? "?";
+    const diff = val1 - val2;
+
+    let diffText = isNaN(diff) ? "—" : diff.toFixed(2);
+    if (!isNaN(diff)) {
+      if (Math.abs(diff) < 0.01) diffText = "≈0.00";
+      else if (diff > 0) diffText = "+" + diffText;
+    }
+
+    const diffClass = diff > 0.01 ? "diff-positive" :
+                      diff < -0.01 ? "diff-negative" : "";
+
+    const label = labels[i] || `Stat ${i+1}`;
+
+    output += `${label.padEnd(24)} │ `;
+    output += `${val1.toFixed(2).padEnd(22)} │ `;
+    output += `${val2.toFixed(2).padEnd(22)} │ `;
+    output += `<span class="${diffClass}">${diffText}</span>\n`;
+  });
+
+  resultDiv.innerHTML = "<pre>" + output + "</pre>";
+
+  // Now compute model input: diffs (fav - dog), append 1, normalize
+  if (!session) {
+    resultDiv.innerHTML += '<p style="color:crimson">Model not loaded!</p>';
+    return;
+  }
+
+  let diffs = [];
+  for (let i = 0; i < s1.length; i++) {
+    diffs.push(s1[i] - s2[i]);
+  }
+  diffs.push(1.0);  // Add element 1 to make 17 features
+
+  // Normalize
+  for (let i = 0; i < diffs.length; i++) {
+    diffs[i] = (diffs[i] - mean[i]) / (std[i] + 1e-8);
+  }
+
+  // Create ONNX tensor
+  const inputTensor = new ort.Tensor('float32', new Float32Array(diffs), [1, 17]);
+
+  // Monte Carlo dropout eval (multiple runs for uncertainty)
+  const n_samples = 50;
+  let probs = [];
+  try {
+    for (let mc = 0; mc < n_samples; mc++) {
+      const feeds = { input: inputTensor };
+      const results = await session.run(feeds);
+      const logit = results.output.data[0];
+      const prob = 1 / (1 + Math.exp(-logit));  // sigmoid
+      probs.push(prob);
+    }
+
+    // Compute mean and std
+    const mean_prob = probs.reduce((a, b) => a + b, 0) / n_samples;
+    const variance = probs.reduce((a, b) => a + Math.pow(b - mean_prob, 2), 0) / n_samples;
+    const std_prob = Math.sqrt(variance);
+
+    // Append to output
+    resultDiv.innerHTML += `
+      <div id="prediction">
+        <h3>Model Prediction (Monte Carlo Dropout)</h3>
+        <p>Probability that ${name1} (as favorite) wins: ${mean_prob.toFixed(4)} ± ${std_prob.toFixed(4)}</p>
+        <p>Based on ${n_samples} samples. Uncertainty indicates model confidence.</p>
+      </div>
+    `;
+  } catch (err) {
+    resultDiv.innerHTML += '<p style="color:crimson">Error running model: ' + err.message + '</p>';
+  }
+}
+
+// Start loading
+window.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
